@@ -56,8 +56,8 @@ plt.plot(X2, Y2, label=f"mean(μ): {mean2} Standard deviation(δ): {stdev}")
 plt.plot(X3, Y3, label=f"mean(μ): {mean3} Standard deviation(δ): {stdev}")
 plt.legend()
 plt.title("Gaussian distributions: Same standard deviation different mean")
-plt.xlabel("X")
-plt.ylabel("Y")
+plt.xlabel("Feature values")
+plt.ylabel("Density values")
 plt.figtext(
     0.5,
     0.01,
