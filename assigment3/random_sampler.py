@@ -1,6 +1,7 @@
 import numpy as np
 
-def drawSamples(pmf: dict[str,float], n: int = 5) -> list[str]:
+
+def drawSamples(pmf: dict[str, float], n: int = 5) -> list[str]:
     cmf = []
     key_list = list(pmf.keys())
     for key in key_list:
@@ -29,4 +30,4 @@ pmf = {
     "QRST": 0.40740741,
     "UVWXYZ": 0.11111111,
 }
-print(drawSamples(pmf, 6))
+print(drawSamples(pmf, 16))
