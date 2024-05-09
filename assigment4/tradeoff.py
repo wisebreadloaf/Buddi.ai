@@ -170,6 +170,11 @@ def valid(
     eps_quart_valid = np.sum(np.abs(Y_valid - quart_valid) / len(X1_valid))
     # eps_lagrange_valid = np.sum(np.abs(Y_valid - lagrange_valid) / len(X1_valid))
 
+    # eps_lin_valid = np.sum((Y_valid - lin_valid) ** 2 / len(X1_valid))
+    # eps_quad_valid = np.sum((Y_valid - quad_valid) ** 2 / len(X1_valid))
+    # eps_cube_valid = np.sum((Y_valid - cube_valid) ** 2 / len(X1_valid))
+    # eps_quart_valid = np.sum((Y_valid - quart_valid) ** 2 / len(X1_valid))
+
     return [
         eps_lin_valid,
         eps_quad_valid,
