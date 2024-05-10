@@ -1,239 +1,236 @@
+# Importing the numerical Python library
 import numpy as np
+
+# Importing matplotlib for plotting the graph
 import matplotlib.pyplot as plt
 
+# random module
+import random
 
+
+# Function to generate a dataset based on the input x
 def datasetGenerator(x: int) -> int:
     return (
-        ((2 * x) ** 4)
-        - ((3 * x) ** 3)
-        + ((7 * x) ** 2)
-        + (23 * x)
+        (2 * (x**4))
+        - (3 * (x**3))
+        + (7 * (x**2))
+        - (23 * (x))
         + 8
-        + np.random.normal(0, 3)
+        # Adding noise to the data
+        + np.random.normal(0, 100)
     )
 
 
-X = np.linspace(-5, 5, 100)
-Y = datasetGenerator(X)
+def betaCalculation(X: list[float], Y: list[float], n: int) -> int:
+    # numpy array of X power 1 to 5
+    Xtrans = [np.power(X, i) for i in range(n + 1)]
 
-X1 = X
-X0 = np.array(X1**0)
-X2 = np.array(X1**2)
-X3 = np.array(X1**2)
-X4 = np.array(X1**2)
+    # actual X values in form of X tranpose's transpose
+    Xnew = np.transpose(Xtrans)
 
-split_idx_train = int(X.shape[0] * 0.7)
-split_idx_valid = split_idx_train + int(X.shape[0] * 0.1)
+    # dot product of X transpose with X
+    XTX = np.matmul(Xtrans, Xnew)
 
-X1_train = X[:split_idx_train]
-X0_train = np.array(X1_train**0)
-X2_train = np.array(X1_train**2)
-X3_train = np.array(X1_train**3)
-X4_train = np.array(X1_train**4)
-Y_train = datasetGenerator(X1_train)
+    # inverse of dot product of X Transpose with X
+    XTXm1 = np.linalg.inv(XTX)
 
-X1_valid = X[:split_idx_valid]
-X0_valid = np.array(X1_valid**0)
-X2_valid = np.array(X1_valid**2)
-X3_valid = np.array(X1_valid**3)
-X4_valid = np.array(X1_valid**4)
-Y_valid = datasetGenerator(X1_valid)
+    # dot product of inverse of dot product of X transpose and X with X tranpose
+    XTXinvintoXT = np.matmul(XTXm1, Xtrans)
 
-X1_test = X[split_idx_valid:]
-X0_test = np.array(X1_test**0)
-X2_test = np.array(X1_test**2)
-X3_test = np.array(X1_test**3)
-X4_test = np.array(X1_test**4)
-Y_test = np.array(datasetGenerator(X1_test))
+    # Dot product of dot product of inverse of dot product of X transpose and X with X tranpose with Y
+    B_four = np.matmul(XTXinvintoXT, Y)
+
+    # array of beta elements
+    return B_four
 
 
-# X_leg = np.array([X0_test, X1_test, X2_test, X3_test, X4_test])
-# X_fourT = np.transpose(X_leg)
-
-
-X_fourT = np.transpose(np.array([X0_test, X1_test, X2_test, X3_test, X4_test]))
-X_leg = np.array([X0_test, X1_test, X2_test, X3_test, X4_test])
-
-
-XTX = np.matmul(X_leg, X_fourT)
-XTXm1 = np.linalg.inv(XTX)
-XTXintoXT = np.matmul(XTXm1, X_leg)
-B_four = np.matmul(XTXintoXT, Y_test)
-
-
-def linearModel(X1: list[float], B_four: list[float]) -> list[float]:
-    return B_four[0] + (B_four[1] * X1)
-
-
-def quadraticModel(
-    X1: list[float], X2: list[float], B_four: list[float]
-) -> list[float]:
-    return B_four[0] + ((B_four[1] * X1) + (B_four[2] * X2))
-
-
-def CubicModel(
-    X1: list[float], X2: list[float], X3: list[float], B_four: list[float]
-) -> list[float]:
-    return B_four[0] + ((B_four[1] * X1) + (B_four[2] * X2) + (B_four[3] * X3))
-
-
-def quarternaryModel(
-    X1: list[float],
-    X2: list[float],
-    X3: list[float],
-    X4: list[float],
-    B_four: list[float],
-) -> list[float]:
-    return B_four[0] + (
-        (B_four[1] * X1) + (B_four[2] * X2) + (B_four[3] * X3) + (B_four[4] * X4)
-    )
-
-
+# Function for Lagrange interpolation
 def lagrangeInterpolation(x_values, y_values, x, n):
     result = 0
+    # initialising a for loop for i, j in the lagrange equation
     for i in range(n):
         numer = 1
         denom = 1
         for j in range(n):
+            # calculating the numerator and denominator seperately
             if i != j:
                 numer *= x - x_values[j]
                 denom *= x_values[i] - x_values[j]
+        # adding the multiplication of yi into (numerator/ denominator) to result
         result += y_values[i] * numer / denom
+
+    # return the result prediction of the lagrange model
     return result
 
 
-def models(
-    X1: list[float],
-    X2: list[float],
-    X3: list[float],
-    X4: list[float],
-    B_four: list[float],
-) -> tuple[float]:
-    lin = linearModel(X1, B_four)
-    quad = quadraticModel(X1, X2, B_four)
-    cube = CubicModel(X1, X2, X3, B_four)
-    quart = quarternaryModel(X1, X2, X3, X4, B_four)
-    lagrange = [lagrangeInterpolation(X1, Y, x, len(X1)) for x in X1]
-
-    return [lin, quad, cube, quart, lagrange]
+# mean squared error calculation for comparing the actual y with the prediction
+def MeanSquaredError(y: float, y_pred: float) -> float:
+    # summation of squares of all the y with y predictions divided by the length of y
+    return sum((y - y_pred) ** 2 / len(y))
 
 
-models = models(X1, X2, X3, X4, B_four)
-print(models[0].shape)
+def biasVarianceTradeoff(
+    X_train: list[float],
+    Y_train: list[float],
+    X_test: list[float],
+    Y_test: list[float],
+    deg: int,
+    betaArray: list[list[float]],
+) -> tuple[list[float]]:
+    # empty bias and varinace array initialised
+    bias = []
+    variance = []
+
+    # model predictions for the training dataset is computed for all the models till the degree size of deg+1
+    for i in range(deg + 1):
+        # The predicted value of the training dataset is computed using the respective models
+        y_pred_train = np.array(
+            sum(
+                betaArray[i][j] * np.power(X_train, j) for j in range(len(betaArray[i]))
+            )
+        )
+
+        # The predicted value of the testing dataset is computed using the models computed using the training dataset
+        y_pred_test = np.array(
+            sum(betaArray[i][j] * np.power(X_test, j) for j in range(len(betaArray[i])))
+        )
+
+        # The mean squared error is computed for the training dataset
+        yBias = MeanSquaredError(Y_train, y_pred_train)
+        # The mean squared error is computed for the testing dataset
+        yVar = MeanSquaredError(Y_test, y_pred_test)
+        # The mean squared error of training dataset is stored in the bias array
+        bias.append(yBias)
+        # The mean squared error of testing dataset is stored in the variance array
+        variance.append(yVar)
+
+    return bias, variance
 
 
-def train(X1_train):
-    lin_train = linearModel(X1_train, B_four)
-    quad_train = quadraticModel(X1_train, X2_train, B_four)
-    cube_train = CubicModel(X1_train, X2_train, X3_train, B_four)
-    quart_train = quarternaryModel(X1_train, X2_train, X3_train, X4_train, B_four)
-    lagrange_train = [
-        lagrangeInterpolation(X1_train, Y_train, x, len(X1_train)) for x in X1_train
-    ]
-
-    eps_lin_train = np.sum(np.abs(Y_train - lin_train) / len(X1_train))
-    eps_quad_train = np.sum(np.abs(Y_train - quad_train) / len(X1_train))
-    eps_cube_train = np.sum(np.abs(Y_train - cube_train) / len(X1_train))
-    eps_quart_train = np.sum(np.abs(Y_train - quart_train) / len(X1_train))
-    eps_lagrange_train = np.sum(np.abs(Y_train - lagrange_train) / len(X1_train))
-
-    return [
-        eps_lin_train,
-        eps_quad_train,
-        eps_cube_train,
-        eps_quart_train,
-        eps_lagrange_train,
-    ]
+# given the dataset and the betas with the maximum degree until which degree we want the  model complexity to be it returns the nd array of the predicted values of the model
+def model(
+    xplot: list[float], betaArray: list[list[float]], deg: int
+) -> list[list[float]]:
+    return np.array(
+        [
+            sum(betaArray[i][j] * (xplot**j) for j in range(len(betaArray[i])))
+            for i in range(deg + 1)
+        ]
+    )
 
 
-bias_eps = train(X1_train)
+def main():
+    # Generating 100 evenly spaced numbers between -5 and 5
+    # contains the whole population of data
+    X_init = np.linspace(-5, 5, 100)
+
+    # Calling the datasetGenerator function to get y for every x in X
+    Y_init = datasetGenerator(X_init)
+
+    XYtup = []
+    for i in range(len(X_init)):
+        XYtup.append(tuple([X_init[i], Y_init[i]]))
+
+    # shuffling the list of tuples using inplace shuffling method in numpy random shuffl
+    np.random.shuffle(np.array(XYtup))
+
+    # getting the training dataset
+    # The X array is sliced to get the training array, this is also the X^1 array
+    X = np.array([XYtup[i][0] for i in range(len(X_init))])
+    Y = np.array([XYtup[i][1] for i in range(len(X_init))])
+
+    # Splitting the dataset into training, validation, and testing sets
+    split_idx_train = int(X.shape[0] * 0.8)
+    split_idx_test = int(X.shape[0] - (X.shape[0] * 0.8))
+
+    # creating the test and training part of the dataset
+    X_train, Y_train = zip(*(random.sample(XYtup, split_idx_train)))
+    X_test, Y_test = zip(*(random.sample(XYtup, split_idx_test)))
+
+    # finding the training and test error for the lagrange model
+    Y_train_lag = np.array(
+        [
+            lagrangeInterpolation(X_train, Y_train, X_train[i], len(X_train))
+            for i in range(len(X_train))
+        ]
+    )
+    Y_test_lag = np.array(
+        [
+            lagrangeInterpolation(X_train, Y_train, X_test[i], len(X_train))
+            for i in range(len(X_test))
+        ]
+    )
+
+    # x plot is a linspace between -5 and 5 with 10000 elements in between
+    xplot = np.linspace(-5, 5, 10000)
+    deg = 10
+
+    # this array contains the beta values till degree of 10
+    betaArray = [betaCalculation(X_train, Y_train, i) for i in range(deg + 1)]
+
+    # contains the x values in linspace of -5 to 5 with 1000 values
+    models = model(xplot, betaArray, deg)
+
+    bias, variance = biasVarianceTradeoff(
+        X_train, Y_train, X_test, Y_test, deg, betaArray
+    )
+
+    # print the variance of bias of models of degree 1 - 10 with lagrange
+    print(f"the bias of model with degree: {deg} is {bias}")
+    print(f"the bias of model with degree: {deg} is {variance}")
+    print(f"the bias of legrange's modes {Y_train_lag} and variance is {Y_test_lag}")
+
+    # plotting the predictions and the actual values of the models
+    for i in range(1, deg + 1):
+        if i == 1:
+            plt.plot(xplot, models[i], label=f"{i}st degree model ")
+        elif i == 2:
+            plt.plot(xplot, models[i], label=f"{i}nd degree model ")
+        elif i == 3:
+            plt.plot(xplot, models[i], label=f"{i}rd degree model ")
+        else:
+            plt.plot(xplot, models[i], label=f"{i}th degree model ")
+
+    # using scatterplot to plot the actual values
+    plt.scatter(X_train, Y_train, label="Actual values", marker="x")
+    plt.title(f"Model performance from degree 1 to {deg}")
+    plt.xlabel(f"feature - X, X**2 ... , X ** {deg}")
+    plt.ylabel("model prediction")
+    plt.figtext(
+        0.5,
+        0.01,
+        f"Model performance from degree 1 to {deg}",
+        wrap=True,
+        horizontalalignment="center",
+        fontsize=10,
+        bbox={"facecolor": "grey", "alpha": 0.3, "pad": 5},
+    )
+    plt.legend()
+    plt.show()
+    plt.close()
+
+    # Plotting the bias-variance trade-off
+    plt.plot([i for i in range(0, deg + 1)], bias, c="b", label="Bias", marker=".")
+    plt.title("Bias-Variance Trade off")
+    plt.xlabel("Model Complexity")
+    plt.ylabel("Error")
+    plt.figtext(
+        0.5,
+        0.01,
+        f"This plot represent the bias, variance trade off when we increase the model complexity from degree {1} to {deg+1}",
+        wrap=True,
+        horizontalalignment="center",
+        fontsize=10,
+        bbox={"facecolor": "grey", "alpha": 0.3, "pad": 5},
+    )
+    # iterating from 1 to degree + 1 to print the variance
+    plt.plot(
+        [i for i in range(0, deg + 1)], variance, c="r", label="Variance", marker="."
+    )
+    plt.title("Bias-Variance Trade off")
+    plt.legend()
+    plt.show()
 
 
-def valid(
-    X1_valid: list[float],
-    X2_valid: list[float],
-    X3_valid: list[float],
-    X4_valid: list[float],
-    B_four: list[float],
-):
-    lin_valid = linearModel(X1_valid, B_four)
-    quad_valid = quadraticModel(X1_valid, X2_valid, B_four)
-    cube_valid = CubicModel(X1_valid, X2_valid, X3_valid, B_four)
-    quart_valid = quarternaryModel(X1_valid, X2_valid, X3_valid, X4_valid, B_four)
-    # lagrange_valid = [
-    # lagrangeInterpolation(X1_valid, Y_valid, x, len(X1_valid)) for x in X1_valid
-    # ]
-
-    eps_lin_valid = np.sum(np.abs(Y_valid - lin_valid) / len(X1_valid))
-    eps_quad_valid = np.sum(np.abs(Y_valid - quad_valid) / len(X1_valid))
-    eps_cube_valid = np.sum(np.abs(Y_valid - cube_valid) / len(X1_valid))
-    eps_quart_valid = np.sum(np.abs(Y_valid - quart_valid) / len(X1_valid))
-    # eps_lagrange_valid = np.sum(np.abs(Y_valid - lagrange_valid) / len(X1_valid))
-
-    # eps_lin_valid = np.sum((Y_valid - lin_valid) ** 2 / len(X1_valid))
-    # eps_quad_valid = np.sum((Y_valid - quad_valid) ** 2 / len(X1_valid))
-    # eps_cube_valid = np.sum((Y_valid - cube_valid) ** 2 / len(X1_valid))
-    # eps_quart_valid = np.sum((Y_valid - quart_valid) ** 2 / len(X1_valid))
-
-    return [
-        eps_lin_valid,
-        eps_quad_valid,
-        eps_cube_valid,
-        eps_quart_valid,
-        # eps_lagrange_valid,
-    ]
-
-
-variance_eps = valid(X1_valid, X2_valid, X3_valid, X4_valid, B_four)
-
-print(bias_eps)
-print(variance_eps)
-
-lin_model = models[0]
-quad_model = models[1]
-cube_model = models[2]
-quart_model = models[3]
-lagrange_model = models[4]
-
-txt = "Model prediction of Linear,Quadratic,cubic,quaternary,lagrange polynomial models"
-plt.scatter(X, Y, label="Actual values", marker="x")
-plt.plot(X, lin_model, label="linear polynomial model", marker=".")
-plt.plot(X, quad_model, label="quadratic polynomial model", marker=".")
-plt.plot(X, cube_model, label="cubic polynomial model", marker=".")
-plt.plot(X, quart_model, label="quarternary polynomial model", marker=".")
-plt.plot(X, lagrange_model, label="Lagrange polynomial model", marker=".")
-plt.title("Model performance")
-plt.xlabel("feature - [X]")
-plt.ylabel("model prediction")
-plt.figtext(
-    0.5,
-    0.01,
-    txt,
-    wrap=True,
-    horizontalalignment="center",
-    fontsize=10,
-    bbox={"facecolor": "grey", "alpha": 0.3, "pad": 5},
-)
-plt.legend()
-plt.show()
-plt.close()
-
-
-txt = "This plot represent the bias, variance trade off when we increase the model complexity from linear to quadratic to cubic to quarternary and also Lagrange"
-x = [1, 2, 3, 4, 70]
-plt.plot(x, bias_eps, c="b", label="Bias", marker=".")
-plt.title("Bias-Variance Trade off")
-plt.xlabel("Model Complexity")
-plt.ylabel("Error")
-plt.figtext(
-    0.5,
-    0.01,
-    txt,
-    wrap=True,
-    horizontalalignment="center",
-    fontsize=10,
-    bbox={"facecolor": "grey", "alpha": 0.3, "pad": 5},
-)
-plt.plot(x[:4], variance_eps, c="r", label="Variance", marker=".")
-plt.legend()
-plt.show()
+if __name__ == "__main__":
+    main()
