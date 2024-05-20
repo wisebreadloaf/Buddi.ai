@@ -6,7 +6,7 @@ txt1 = "The width of the plot changes with different standard deviations"
 txt2 = "The height and the position of peak of the plot changes with different means"
 
 
-def normalDistribution(x:float , mean: float , stdev:float):
+def normalDistribution(x: float, mean: float, stdev: float):
     return (1 / (stdev * np.sqrt(2 * np.pi))) * np.exp(
         -1 / 2 * (((x - mean) / stdev) ** 2)
     )
